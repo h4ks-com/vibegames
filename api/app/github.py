@@ -57,9 +57,7 @@ def update_or_create_file(path: str, content: str, project: str) -> None:
 
 def get_file_content(project: str, path: str | None = None) -> str:
     repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
-    base_url = (
-        f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/main/{settings.PROJECTS_PATH}/{project}"
-    )
+    base_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/main/{settings.PROJECTS_PATH}/{project}"
 
     path = path or "index.html"
     base_url = f"{base_url}/index.html"

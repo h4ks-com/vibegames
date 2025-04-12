@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 import pytz
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -67,7 +68,8 @@ def get_game_html(project: str, db: Session = Depends(get_db)) -> Response:
 
 @router.get("/api/games")
 def list_games(
-    sort_by: str = Query("date_added", regex="^(date_added|date_modified|hottest)$"), db: Session = Depends(get_db)
+    sort_by: Literal["date_added", "date_modified", "hottest"] = Query("date_added"),
+    db: Session = Depends(get_db),
 ) -> list[dict]:
     """
     List all game projects.

@@ -22,6 +22,9 @@ dependencies = [
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.15.0"
+types-pytz = "^2025.2.0.20250326"
+types-requests = "^2.32.0.20250328"
+pre-commit = "^4.2.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -33,3 +36,8 @@ target-version = 'py312'
 
 [tool.ruff.lint.isort]
 force-single-line = true
+
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
