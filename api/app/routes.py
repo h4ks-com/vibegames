@@ -66,7 +66,7 @@ def get_game_html(project: str, db: Session = Depends(get_db)) -> Response:
     return Response(content, media_type="text/html")
 
 
-@router.get("/api/games")
+@router.get("/games")
 def list_games(
     sort_by: Literal["date_added", "date_modified", "hottest"] = Query("date_added"),
     db: Session = Depends(get_db),
@@ -95,6 +95,7 @@ def list_games(
                 "date_modified": game.date_modified,
                 "num_opens": game.num_opens,
                 "html_path": f"/api/game/{game.project}",
+                "github_url": github.get_file_url(game.project),
             }
         )
     return results

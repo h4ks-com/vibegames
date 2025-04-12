@@ -66,3 +66,9 @@ def get_file_content(project: str, path: str | None = None) -> str:
         return resp.text
     else:
         raise GithubFileNotFoundError(f"File not found: {base_url}")
+
+
+def get_file_url(project: str, path: str | None = None) -> str:
+    """Returns github UI URL to the file."""
+    repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
+    return f"https://www.github.com/{repo_owner}/{repo_name}/blob/main/{settings.PROJECTS_PATH}/{project}/{path or 'index.html'}"
