@@ -1,0 +1,13 @@
+services:
+  api:
+    build:
+      context: .
+    environment:
+      DB_PATH: sqlite:///db/db.sqlite
+      PORT: 8088
+    ports:
+      - "8088:8088"
+    volumes:
+      - db:/db
+volumes:
+  db:
