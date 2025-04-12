@@ -1,0 +1,35 @@
+[project]
+name = "vibegames-api"
+version = "0.1.0"
+description = "API for games.h4ks.com"
+authors = [
+    {name = "Matheus Fillipe",email = "matheusfillipeag@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi (>=0.115.12,<0.116.0)",
+    "sqlalchemy (>=2.0.40,<3.0.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "requests (>=2.32.3,<3.0.0)",
+    "pydantic (>=2.11.3,<3.0.0)",
+    "pydantic-settings (>=2.8.1,<3.0.0)",
+    "pytz (>=2025.2,<2026.0)"
+]
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.15.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+target-version = 'py312'
+
+[tool.ruff.lint.isort]
+force-single-line = true
