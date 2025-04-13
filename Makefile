@@ -18,3 +18,13 @@ check-full:
 check-staged:
 	cd api && \
 	poetry run pre-commit run --staged-files
+
+.PHONY: run-api
+run-api:
+	cd api && \
+		poetry run python -m app
+
+.PHONY: run-frontend
+run-frontend:
+	cd frontend && \
+		npm run start

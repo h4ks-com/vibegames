@@ -60,7 +60,7 @@ def get_file_content(project: str, path: str | None = None) -> str:
     base_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/main/{settings.PROJECTS_PATH}/{project}"
 
     path = path or "index.html"
-    base_url = f"{base_url}/index.html"
+    base_url = f"{base_url}/{path}"
     resp = requests.get(base_url)
     if resp.status_code == 200:
         return resp.text
@@ -72,3 +72,31 @@ def get_file_url(project: str, path: str | None = None) -> str:
     """Returns github UI URL to the file."""
     repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
     return f"https://www.github.com/{repo_owner}/{repo_name}/blob/main/{settings.PROJECTS_PATH}/{project}/{path or 'index.html'}"
+
+
+def delete_project(project: str) -> None:
+    repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
+    # Loop through all files in the project and delete them
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{settings.PROJECTS_PATH}/{project}"
+    headers = {"Authorization": f"token {settings.GITHUB_API_TOKEN}"}
+    files_resp = requests.get(api_url, headers=headers)
+    files_resp.raise_for_status()
+    files = files_resp.json()
+    for file in files:
+        file_path = file["path"]
+        delete_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+        body = {
+            "message": "Delete file via API",
+            "sha": file["sha"],
+        }
+        delete_resp = requests.delete(delete_url, headers=headers, json=body)
+        delete_resp.raise_for_status()
+
+
+def get_projects() -> list[str]:
+    repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{settings.PROJECTS_PATH}"
+    headers = {"Authorization": f"token {settings.GITHUB_API_TOKEN}"}
+    resp = requests.get(api_url, headers=headers)
+    resp.raise_for_status()
+    return [item["name"] for item in resp.json() if item["type"] == "dir"]

@@ -386,6 +386,18 @@ files = [
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
 
 [[package]]
+name = "mistletoe"
+version = "1.4.0"
+description = "A fast, extensible Markdown parser in pure Python."
+optional = false
+python-versions = "~=3.5"
+groups = ["main"]
+files = [
+    {file = "mistletoe-1.4.0-py3-none-any.whl", hash = "sha256:44a477803861de1237ba22e375c6b617690a31d2902b47279d1f8f7ed498a794"},
+    {file = "mistletoe-1.4.0.tar.gz", hash = "sha256:1630f906e5e4bbe66fdeb4d29d277e2ea515d642bb18a9b49b136361a9818c9d"},
+]
+
+[[package]]
 name = "mypy"
 version = "1.15.0"
 description = "Optional static typing for Python"
@@ -1050,5 +1062,5 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.10"
-content-hash = "2913e776086a3f4589c81695307c3ee8f0b5ac24059a46288c798185fa305cca"
+python-versions = ">=3.10,<4.0"
+content-hash = "9e31c1a836cced89ec469686b615da038f799f1e7bedd29f341b417c5333f4b5"

@@ -19,7 +19,7 @@ export const GameView: React.FC<Props> = ({game, onBack}) => (
     <iframe
       src={`${process.env.REACT_APP_API_URL}/api/game/${game.project}`}
       title={game.project}
-      style={{width: '100%', height: '70vh', border: 'none', pointerEvents: 'none'}}
+      style={{width: '100%', height: '70vh', border: 'none', pointerEvents: 'none', backgroundColor: '#fff'}}
     />
   </Paper>
 );

@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -8,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from app.database import engine
 from app.models import Base
 from app.routes import router
+from app.settings import settings
 
 WORKERS = 4  # Number of worker threads for handling requests
 
@@ -15,7 +17,11 @@ WORKERS = 4  # Number of worker threads for handling requests
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     # Create the database and tables if they do not exist.
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        logging.error(f"Error creating database table at {settings.DB_PATH}")
+        raise
     yield
 
 

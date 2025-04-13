@@ -2,7 +2,6 @@ import React from 'react';
 import {Paper, Typography, IconButton, Link} from '@mui/material';
 import PinDropIcon from '@mui/icons-material/PinDrop';
 import {Game} from '../types/game';
-import {Container} from '@mui/system';
 
 type Props = {
   game: Game;
@@ -16,6 +15,26 @@ export const GameCard: React.FC<Props> = ({game, onClick, onFavorite}) => {
   return (
     <Paper sx={{p: 2, position: 'relative'}}>
       <Typography variant="h6">{game.project}</Typography>
+      <div
+        onClick={onClick}
+        style={{cursor: 'pointer'}}
+      >
+        <iframe
+          src={`${url}&count=false`}
+          title={`${game.project} preview`}
+          style={{
+            width: '100%',
+            height: 200,
+            border: 'none',
+            pointerEvents: 'none',
+            marginTop: 8,
+            backgroundColor: '#fff', // Ensure a white background
+          }}
+        />
+      </div>
+      <Typography variant="body2">
+        Opened {game.num_opens} times
+      </Typography>
       <Typography variant="body2">Created: {new Date(game.date_added).toLocaleDateString()}</Typography>
       <Typography variant="body2">
         Last Edited: {new Date(game.date_modified).toLocaleDateString()}
@@ -28,23 +47,6 @@ export const GameCard: React.FC<Props> = ({game, onClick, onFavorite}) => {
           Open in new tab
         </Link>
       </Typography>
-      <div
-        onClick={onClick}
-        style={{cursor: 'pointer'}}
-      >
-        <iframe
-          src={url}
-          title={`${game.project} preview`}
-          style={{
-            width: '100%',
-            height: 200,
-            border: 'none',
-            pointerEvents: 'none',
-            marginTop: 8,
-            backgroundColor: '#fff', // Ensure a white background
-          }}
-        />
-      </div>
       <Link
         href={game.github_url}
         target="_blank"

@@ -18,23 +18,27 @@ const App: React.FC = () => {
   const [favoriteSearch, setFavoriteSearch] = useState('');
   const [favorites, setFavorites] = useState<Game[]>([]);
 
+  const fetchGames = async () => {
+    const res = await axios.get<Game[]>(`${process.env.REACT_APP_API_URL}/api/games`, {
+      params: {sort_by: sortBy, search_query: searchTerm || undefined},
+    });
+    setGames(res.data);
+  };
+
   useEffect(() => {
     fetchGames();
     const fav = localStorage.getItem('favoriteGames');
     if (fav) setFavorites(JSON.parse(fav));
   }, [sortBy]);
 
-  const fetchGames = async () => {
-    const res = await axios.get<Game[]>(`${process.env.REACT_APP_API_URL}/api/games`, {
-      params: {sort_by: sortBy},
-    });
-    setGames(res.data);
-  };
-
   const handleFavorite = (game: Game) => {
     const updated = [...favorites, game];
     setFavorites(updated);
-    localStorage.setItem('favoriteGames', JSON.stringify(updated));
+    // Avoid duplicates
+    const unique = updated.filter((g, index, self) =>
+      index === self.findIndex((t) => t.project === g.project)
+    );
+    setFavorites(unique);
   };
 
   return (
