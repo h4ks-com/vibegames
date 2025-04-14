@@ -11,8 +11,6 @@ from app.settings import settings
 class GithubFileNotFoundError(Exception):
     """Custom exception for file not found in GitHub repository."""
 
-    pass
-
 
 @lru_cache
 def get_repo_owner_and_name(repo_url: str) -> tuple[str, str]:

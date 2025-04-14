@@ -3,10 +3,12 @@ default_language_version:
 
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.4
+  rev: v0.11.5
   hooks:
   - id: ruff
-    args: ["--fix"]
+    args: ["--config", "api/pyproject.toml", "--fix"]
+  - id: ruff-format
+    args: ["--config", "api/pyproject.toml"]
 
 - repo: local
   hooks:

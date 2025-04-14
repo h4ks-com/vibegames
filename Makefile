@@ -6,18 +6,14 @@ endif
 
 .PHONY: check
 check:
-	cd api && \
-	poetry run pre-commit run --all-files
+	poetry -P api run pre-commit run --all-files
 
 .PHONY: check-full
 check-full:
-	cd api && \
-	poetry run pre-commit run --all-files --hook-stage manual
+	poetry -P api run pre-commit run --all-files
 
 .PHONY: check-staged
-check-staged:
-	cd api && \
-	poetry run pre-commit run --staged-files
+	poetry -P api run pre-commit run --staged-files
 
 .PHONY: run-api
 run-api:

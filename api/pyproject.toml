@@ -33,7 +33,12 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 120
-target-version = 'py312'
+target-version = 'py310'
+
+[tool.ruff.lint]
+extend-select = [
+    "F", "W", "I", "UP", "C4", "ICN", "PIE", "RUF"
+]
 
 [tool.ruff.lint.isort]
 force-single-line = true

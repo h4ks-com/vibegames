@@ -3,13 +3,22 @@ from datetime import datetime
 from typing import Literal
 
 import pytz
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request, Response
+from fastapi import APIRouter
+from fastapi import Body
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Path
+from fastapi import Query
+from fastapi import Request
+from fastapi import Response
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from app import g4f, github
+from app import g4f
+from app import github
 from app.auth import get_api_key
 from app.database import get_db
 from app.models import Game
