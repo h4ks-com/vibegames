@@ -28,8 +28,11 @@ export const GameCard: React.FC<Props> = ({game, onClick, onFavorite}) => {
             border: 'none',
             pointerEvents: 'none',
             marginTop: 8,
-            backgroundColor: '#fff', // Ensure a white background
+            backgroundColor: '#fff',
+            overflow: 'hidden',
           }}
+          seamless
+          scrolling='no'
         />
       </div>
       <Typography variant="body2">

@@ -8,11 +8,12 @@ import {TopAppBar} from './components/AppBar';
 import {GameGrid} from './components/GameGrid';
 import {GameView} from './components/GameView';
 import {Sidebar} from './components/Sidebar';
+import {SortByOptions} from './types/api';
 
 const App: React.FC = () => {
   const [games, setGames] = useState<Game[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'date_added' | 'date_modified' | 'hottest'>('hottest');
+  const [searchTerm, setSearchTerm] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortByOptions>('hottest');
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [favoriteSearch, setFavoriteSearch] = useState('');
@@ -29,7 +30,7 @@ const App: React.FC = () => {
     fetchGames();
     const fav = localStorage.getItem('favoriteGames');
     if (fav) setFavorites(JSON.parse(fav));
-  }, [sortBy]);
+  }, [sortBy, searchTerm]);
 
   const handleFavorite = (game: Game) => {
     const updated = [...favorites, game];
@@ -43,38 +44,26 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme} >
-      <div style={{backgroundColor: '#557', width: '100%', height: '100vh'}}>
-        <TopAppBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onSearch={fetchGames}
-          onSortChange={() =>
-            setSortBy((prev) =>
-              prev === 'date_added'
-                ? 'date_modified'
-                : prev === 'date_modified'
-                  ? 'hottest'
-                  : 'date_added'
-            )
-          }
-          sortBy={sortBy}
-          openDrawer={() => setDrawerOpen(true)}
-        />
-        <Sidebar
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          favorites={favorites}
-          search={favoriteSearch}
-          setSearch={setFavoriteSearch}
-        />
-        <Container sx={{mt: 2}}>
-          {selectedGame ? (
-            <GameView game={selectedGame} onBack={() => setSelectedGame(null)} />
-          ) : (
-            <GameGrid games={games} onGameClick={setSelectedGame} onFavorite={handleFavorite} />
-          )}
-        </Container>
-      </ div>
+      <TopAppBar
+        onSearch={setSearchTerm}
+        onSortChange={setSortBy}
+        sortBy={sortBy}
+        openDrawer={() => setDrawerOpen(true)}
+      />
+      <Sidebar
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        favorites={favorites}
+        search={favoriteSearch}
+        setSearch={setFavoriteSearch}
+      />
+      <Container sx={{mt: 2}}>
+        {selectedGame ? (
+          <GameView game={selectedGame} onBack={() => setSelectedGame(null)} />
+        ) : (
+          <GameGrid games={games} onGameClick={setSelectedGame} onFavorite={handleFavorite} />
+        )}
+      </Container>
     </ThemeProvider>
   );
 };

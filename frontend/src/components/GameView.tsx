@@ -20,6 +20,7 @@ export const GameView: React.FC<Props> = ({game, onBack}) => (
       src={`${process.env.REACT_APP_API_URL}/api/game/${game.project}`}
       title={game.project}
       style={{width: '100%', height: '70vh', border: 'none', pointerEvents: 'none', backgroundColor: '#fff'}}
+      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
     />
   </Paper>
 );
