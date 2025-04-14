@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database import engine
 from app.models import Base
-from app.routes import file_router
+from app.routes import router
 from app.settings import settings
 
 WORKERS = 4  # Number of worker threads for handling requests
@@ -32,7 +32,7 @@ app = FastAPI(
     redirect_slashes=True,
 )
 
-app.include_router(file_router)
+app.include_router(router)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 

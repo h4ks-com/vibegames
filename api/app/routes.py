@@ -207,7 +207,7 @@ def list_games(
     Optional query parameter 'sort_by' sorts by either "date_added", "date_modified", or "hottest".
     For "hottest", the sort order is num_opens DESC, then date_added DESC, then date_modified DESC.
     """
-    page_size = 30
+    page_size = 20
     query = db.query(Game)
     if search_query:
         search_query = f"%{search_query}%"
@@ -265,5 +265,5 @@ def delete_project(
     return {"status": "success"}
 
 
-router.include_router(file_router)
 router.include_router(ai_router)
+router.include_router(file_router)
