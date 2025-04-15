@@ -1,6 +1,5 @@
 import base64
 import re
-import time
 from functools import lru_cache
 
 import requests
@@ -56,14 +55,13 @@ def update_or_create_file(path: str, content: str, project: str) -> None:
 
 def get_file_content(project: str, path: str | None = None) -> str:
     repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
-    timestamp = int(time.time() * 100)
-    base_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/main/{settings.PROJECTS_PATH}/{project}"
+    base_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{settings.PROJECTS_PATH}/{project}"
 
     path = path or "index.html"
-    base_url = f"{base_url}/{path}?t={timestamp}"
+    base_url = f"{base_url}/{path}"
     resp = requests.get(
         base_url,
-        headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
+        headers={"Authorization": f"token {settings.GITHUB_API_TOKEN}", "Accept": "application/vnd.github.raw+json"},
     )
     if resp.status_code == 200:
         return resp.text

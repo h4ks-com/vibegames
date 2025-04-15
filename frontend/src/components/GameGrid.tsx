@@ -22,7 +22,7 @@ export const GameGrid: React.FC<Props> = ({games, onGameClick, onFavorite, onBot
 
     const options = {
       root: null,
-      rootMargin: "0px",
+      rootMargin: '0px',
       threshold: 0.5,
     };
 
@@ -34,6 +34,7 @@ export const GameGrid: React.FC<Props> = ({games, onGameClick, onFavorite, onBot
       });
     }, options);
 
+    // Observe the last card element
     const lastCard = cardRefs.current[games.length - 1];
     if (lastCard) {
       observer.observe(lastCard);
@@ -41,15 +42,16 @@ export const GameGrid: React.FC<Props> = ({games, onGameClick, onFavorite, onBot
 
     // Cleanup on unmount or dependency change
     return () => observer.disconnect();
-  }, [hasMore, games]);
+  }, [hasMore, games, onBottomReached]);
 
   if (games.length === 0) {
     return (
       <Grid container spacing={2} justifyContent="center">
         <h2>Nothing found</h2>
       </Grid>
-    )
+    );
   }
+
   return (
     <>
       <Grid container spacing={2} ref={sentinelRef}>
@@ -57,16 +59,18 @@ export const GameGrid: React.FC<Props> = ({games, onGameClick, onFavorite, onBot
           <Grid size={{xs: 12, sm: 6, md: 4}} key={game.project}>
             <GameCard
               game={game}
-              ref={el => {cardRefs.current[index] = el}}
               onClick={() => onGameClick(game)}
               onFavorite={() => onFavorite(game)}
+              ref={el => {
+                cardRefs.current[index] = el;
+              }}
             />
           </Grid>
         ))}
       </Grid>
       {hasMore && <div style={{textAlign: 'center', padding: '1rem'}}>Loading...</div>}
     </>
-  )
+  );
 };
 
 export {};

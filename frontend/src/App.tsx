@@ -38,6 +38,10 @@ const App: React.FC = () => {
       setHasMore(false);
     }
   };
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchGames();

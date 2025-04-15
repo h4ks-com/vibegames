@@ -26,6 +26,7 @@ from app.models import Game
 router = APIRouter()
 file_router = APIRouter(tags=["File management"], prefix="/api")
 ai_router = APIRouter(tags=["AI"], prefix="/api/ai")
+games_router = APIRouter(tags=["Games"], prefix="/game")
 
 
 class RequestBody(BaseModel):
@@ -54,6 +55,7 @@ def reset_db(
 
 @file_router.put("/project/{project_name}/{file_path:path}")
 def upload_file(
+    request: Request,
     body: RequestBody = Body(..., description="File content"),
     project_name: str = Path(..., description="Project name"),
     file_path: str = Path(..., description="File path"),
@@ -81,7 +83,10 @@ def upload_file(
         game.date_modified = now
         flag_modified(game, "date_modified")
     db.commit()
-    return {"status": "success", "html_path": f"/api/game/{game.project}"}
+    return {
+        "status": "success",
+        "html_path": str(request.url_for("get_game_html", project=game.project).path),
+    }
 
 
 def update_context_json(project_name: str, project: g4f.Project) -> None:
@@ -97,6 +102,7 @@ def update_context_json(project_name: str, project: g4f.Project) -> None:
 
 @ai_router.post("/{project_name}")
 def create_ai_project(
+    request: Request,
     body: RequestBody = Body(..., description="Prompt for AI to generate the project"),
     project_name: str = Path(..., description="Project name"),
     auth: str = Depends(get_api_key),
@@ -120,6 +126,7 @@ def create_ai_project(
 
     update_context_json(project_name, project)
     return upload_file(
+        request=request,
         project_name=project_name,
         file_path="index.html",
         body=RequestBody(content=project.files[0].content),
@@ -130,6 +137,7 @@ def create_ai_project(
 
 @ai_router.put("/{project_name}")
 def update_ai_project(
+    request: Request,
     body: RequestBody = Body(..., description="Prompt for AI to generate HTML"),
     project_name: str = Path(..., description="Project name"),
     auth: str = Depends(get_api_key),
@@ -163,6 +171,7 @@ def update_ai_project(
 
     update_context_json(project_name, project)
     return upload_file(
+        request=request,
         project_name=project_name,
         file_path="index.html",
         body=RequestBody(content=project.files[0].content),
@@ -171,7 +180,7 @@ def update_ai_project(
     )
 
 
-@file_router.get("/game/{project}")
+@games_router.get("/{project}")
 def get_game_html(
     project: str,
     request: Request,
@@ -206,6 +215,7 @@ def get_game_html(
 
 @file_router.get("/games")
 def list_games(
+    request: Request,
     sort_by: Literal["date_added", "date_modified", "hottest"] = Query("date_added"),
     search_query: str | None = Query(None, description="Search query for filtering game projects"),
     page: int = Query(1, ge=1, description="Page number for pagination"),
@@ -241,7 +251,7 @@ def list_games(
                 "date_added": game.date_added,
                 "date_modified": game.date_modified,
                 "num_opens": game.num_opens,
-                "html_path": f"/api/game/{game.project}",
+                "html_path": str(request.url_for("get_game_html", project=game.project).path),
                 "github_url": github.get_file_url(game.project),
             }
         )
@@ -276,3 +286,4 @@ def delete_project(
 
 router.include_router(ai_router)
 router.include_router(file_router)
+router.include_router(games_router)
