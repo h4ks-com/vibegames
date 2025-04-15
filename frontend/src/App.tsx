@@ -18,19 +18,32 @@ const App: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [favoriteSearch, setFavoriteSearch] = useState('');
   const [favorites, setFavorites] = useState<Game[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   const fetchGames = async () => {
     const res = await axios.get<Game[]>(`${process.env.REACT_APP_API_URL}/api/games`, {
-      params: {sort_by: sortBy, search_query: searchTerm || undefined},
+      params: {
+        sort_by: sortBy,
+        search_query: searchTerm || undefined,
+        page: page,
+      }
     });
-    setGames(res.data);
+    if (page === 1) {
+      setGames(res.data);
+    } else {
+      setGames((prev) => [...prev, ...res.data]);
+    }
+    if (res.data.length < 20) {
+      setHasMore(false);
+    }
   };
 
   useEffect(() => {
     fetchGames();
     const fav = localStorage.getItem('favoriteGames');
     if (fav) setFavorites(JSON.parse(fav));
-  }, [sortBy, searchTerm]);
+  }, [sortBy, searchTerm, page]);
 
   const handleFavorite = (game: Game) => {
     const updated = [...favorites, game];
@@ -61,7 +74,13 @@ const App: React.FC = () => {
         {selectedGame ? (
           <GameView game={selectedGame} onBack={() => setSelectedGame(null)} />
         ) : (
-          <GameGrid games={games} onGameClick={setSelectedGame} onFavorite={handleFavorite} />
+          <GameGrid
+            games={games}
+            onGameClick={setSelectedGame}
+            onFavorite={handleFavorite}
+            hasMore={hasMore}
+            onBottomReached={() => setPage((prev) => prev + 1)}
+          />
         )}
       </Container>
     </ThemeProvider>

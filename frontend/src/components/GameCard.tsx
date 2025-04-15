@@ -5,15 +5,16 @@ import {Game} from '../types/game';
 
 type Props = {
   game: Game;
+  ref?: React.Ref<HTMLDivElement>;
   onClick: () => void;
   onFavorite: () => void;
 };
 
-export const GameCard: React.FC<Props> = ({game, onClick, onFavorite}) => {
+export const GameCard: React.FC<Props> = ({game, onClick, ref, onFavorite}) => {
   let randomSeed = Math.floor(Math.random() * 1000);
   let url = `${process.env.REACT_APP_API_URL}/api/game/${game.project}?seed=${randomSeed}`;
   return (
-    <Paper sx={{p: 2, position: 'relative'}}>
+    <Paper sx={{p: 2, position: 'relative'}} ref={ref}>
       <Typography variant="h6">{game.project}</Typography>
       <div
         onClick={onClick}

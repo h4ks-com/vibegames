@@ -1,5 +1,5 @@
 import Grid from '@mui/material/Grid';
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import {Game} from '../types/game';
 import {GameCard} from './GameCard';
 
@@ -7,9 +7,42 @@ type Props = {
   games: Game[];
   onGameClick: (game: Game) => void;
   onFavorite: (game: Game) => void;
+  onBottomReached: () => void;
+  hasMore: boolean;
 };
 
-export const GameGrid: React.FC<Props> = ({games, onGameClick, onFavorite}) => {
+export const GameGrid: React.FC<Props> = ({games, onGameClick, onFavorite, onBottomReached, hasMore}) => {
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Set up an IntersectionObserver to load more pages when the sentinel enters view
+  useEffect(() => {
+    if (!hasMore) return;
+    if (sentinelRef.current === null) return;
+
+    const options = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.5,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        observer.unobserve(entry.target);
+        onBottomReached();
+      });
+    }, options);
+
+    const lastCard = cardRefs.current[games.length - 1];
+    if (lastCard) {
+      observer.observe(lastCard);
+    }
+
+    // Cleanup on unmount or dependency change
+    return () => observer.disconnect();
+  }, [hasMore, games]);
+
   if (games.length === 0) {
     return (
       <Grid container spacing={2} justifyContent="center">
@@ -18,17 +51,21 @@ export const GameGrid: React.FC<Props> = ({games, onGameClick, onFavorite}) => {
     )
   }
   return (
-    <Grid container spacing={2}>
-      {games.map((game) => (
-        <Grid size={{xs: 12, sm: 6, md: 4}} key={game.project}>
-          <GameCard
-            game={game}
-            onClick={() => onGameClick(game)}
-            onFavorite={() => onFavorite(game)}
-          />
-        </Grid>
-      ))}
-    </Grid>
+    <>
+      <Grid container spacing={2} ref={sentinelRef}>
+        {games.map((game, index) => (
+          <Grid size={{xs: 12, sm: 6, md: 4}} key={game.project}>
+            <GameCard
+              game={game}
+              ref={el => {cardRefs.current[index] = el}}
+              onClick={() => onGameClick(game)}
+              onFavorite={() => onFavorite(game)}
+            />
+          </Grid>
+        ))}
+      </Grid>
+      {hasMore && <div style={{textAlign: 'center', padding: '1rem'}}>Loading...</div>}
+    </>
   )
 };
 

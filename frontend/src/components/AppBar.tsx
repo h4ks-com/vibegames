@@ -65,7 +65,7 @@ export const TopAppBar: React.FC<Props> = ({
           value={sortBy}
           label="Sort By"
           onChange={(e) => onSortChange(e.target.value as SortByOptions)}
-          sx={{ml: 2, borderRadius: 1, flexGrow: 0.1, minWidth: 120}}
+          sx={{ml: 2, mr: 5, borderRadius: 1, flexGrow: 0.1, minWidth: 120}}
         >
           <MenuItem value={"hottest"}>Hot</MenuItem>
           <MenuItem value={"date_added"}>Newest Creation</MenuItem>
