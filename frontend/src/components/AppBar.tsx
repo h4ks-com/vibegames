@@ -1,9 +1,9 @@
-import ClearIcon from '@mui/icons-material/Clear';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import React, {useState} from 'react';
-import {AppBar, Toolbar, IconButton, TextField, Button, Typography, Select, MenuItem, InputAdornment} from '@mui/material';
+import React, { useState } from 'react';
+import { AppBar, Toolbar, IconButton, TextField, Button, Typography, Select, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import {SortByOptions} from '../types/api';
+import { SortByOptions } from '../types/api';
+import { ClearAdorment } from './ClearAdorment';
 
 type Props = {
   onSearch: (v: string | null) => void;
@@ -25,7 +25,7 @@ export const TopAppBar: React.FC<Props> = ({
         <IconButton color="inherit" edge="start" onClick={openDrawer}>
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" sx={{flexGrow: 1}}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
           H4ks Games
         </Typography>
         <TextField
@@ -35,26 +35,22 @@ export const TopAppBar: React.FC<Props> = ({
           value={textValue}
           onChange={(e) => setTextValue(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSearch(textValue)}
-          sx={{borderRadius: 1, flexGrow: 0.5}}
+          sx={{
+            borderRadius: 1,
+            flexGrow: 0,
+            width: '40%',
+          }}
           slotProps={{
             input: {
               endAdornment: textValue && (
-                <InputAdornment position='end'>
-                  <IconButton
-                    onClick={() => setTextValue('')}
-                    edge='end'
-                    aria-label='clear input'
-                    tabIndex={-1}
-                    sx={{color: 'text.secondary'}}
-                  >
-                    <ClearIcon />
-                  </IconButton>
-                </InputAdornment>
+                <ClearAdorment
+                  onClick={() => setTextValue('')}
+                />
               ),
             },
           }}
         />
-        <Button variant="contained" color="primary" sx={{ml: 1}} onClick={() => {
+        <Button variant="contained" color="primary" sx={{ ml: 1 }} onClick={() => {
           onSearch(textValue);
         }}>
           Search
@@ -65,7 +61,7 @@ export const TopAppBar: React.FC<Props> = ({
           value={sortBy}
           label="Sort By"
           onChange={(e) => onSortChange(e.target.value as SortByOptions)}
-          sx={{ml: 2, mr: 5, borderRadius: 1, flexGrow: 0.1, minWidth: 120}}
+          sx={{ ml: 2, mr: 5, borderRadius: 1, flexGrow: 0, minWidth: 120, width: '10%' }}
         >
           <MenuItem value={"hottest"}>Hot</MenuItem>
           <MenuItem value={"date_added"}>Newest Creation</MenuItem>

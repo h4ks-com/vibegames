@@ -1,9 +1,10 @@
 import React from 'react';
-import {Drawer, Container, Typography, TextField, List, ListItem, ListItemText} from '@mui/material';
-import {Game} from '../types/game';
+import { Drawer, Container, Typography, TextField, List, ListItem, ListItemText } from '@mui/material';
+import { Game } from '../types/game';
+import { ClearAdorment } from './ClearAdorment';
 
 function openGameInNewTab(game: Game) {
-  window.open(`${process.env.REACT_APP_API_URL}/api/game/${game.project}`, '_blank');
+  window.open(`${process.env.REACT_APP_API_URL}${game.html_path}`, '_blank');
 }
 
 type Props = {
@@ -14,14 +15,14 @@ type Props = {
   setSearch: (s: string) => void;
 };
 
-export const Sidebar: React.FC<Props> = ({open, onClose, favorites, search, setSearch}) => {
+export const Sidebar: React.FC<Props> = ({ open, onClose, favorites, search, setSearch }) => {
   const filtered = favorites.filter((g) =>
     g.project.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <Drawer anchor="left" open={open} onClose={onClose}>
-      <Container sx={{width: 300, p: 2}}>
+      <Container sx={{ width: 300, p: 2 }}>
         <Typography variant="h6">Favorite Games</Typography>
         <TextField
           fullWidth
@@ -29,16 +30,32 @@ export const Sidebar: React.FC<Props> = ({open, onClose, favorites, search, setS
           placeholder="Search favorites..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{my: 2}}
+          sx={{ my: 2 }}
+          slotProps={{
+            input: {
+              endAdornment: search && (
+                <ClearAdorment
+                  onClick={() => setSearch('')}
+                />
+              ),
+            },
+          }}
         />
         <List>
           {filtered.map((fav) => (
             <ListItem
               key={fav.project}
-              onClick={
-                () => openGameInNewTab(fav)
-              }
-              sx={{cursor: 'pointer'}}
+              onClick={() => openGameInNewTab(fav)}
+              sx={{
+                cursor: 'pointer',
+                transition: 'background-color 0.3s, transform 0.2s',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                },
+                '&:active': {
+                  transform: 'scale(0.98)',
+                },
+              }}
             >
               <ListItemText primary={fav.project} />
             </ListItem>

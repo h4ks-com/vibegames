@@ -1,14 +1,23 @@
-// src/App.tsx
-import React, {useEffect, useState} from 'react';
-import {ThemeProvider, Container} from '@mui/material';
-import {Game} from './types/game';
+import React, { useEffect, useState } from 'react';
+import { ThemeProvider, Container } from '@mui/material';
+import { Game } from './types/game';
 import theme from './theme';
 import axios from 'axios';
-import {TopAppBar} from './components/AppBar';
-import {GameGrid} from './components/GameGrid';
-import {GameView} from './components/GameView';
-import {Sidebar} from './components/Sidebar';
-import {SortByOptions} from './types/api';
+import { TopAppBar } from './components/AppBar';
+import { GameGrid } from './components/GameGrid';
+import { GameView } from './components/GameView';
+import { Sidebar } from './components/Sidebar';
+import { SortByOptions } from './types/api';
+
+const getFavoriteGames = () => {
+  const fav = localStorage.getItem('favoriteGames');
+  if (fav) return JSON.parse(fav);
+  return [];
+};
+
+const storageFavoriteGames = (games: Game[]) => {
+  localStorage.setItem('favoriteGames', JSON.stringify(games));
+}
 
 const App: React.FC = () => {
   const [games, setGames] = useState<Game[]>([]);
@@ -17,7 +26,7 @@ const App: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [favoriteSearch, setFavoriteSearch] = useState('');
-  const [favorites, setFavorites] = useState<Game[]>([]);
+  const [favorites, setFavorites] = useState<Game[]>(getFavoriteGames());
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
@@ -38,6 +47,7 @@ const App: React.FC = () => {
       setHasMore(false);
     }
   };
+
   useEffect(() => {
     setPage(1);
     setHasMore(true);
@@ -45,18 +55,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     fetchGames();
-    const fav = localStorage.getItem('favoriteGames');
-    if (fav) setFavorites(JSON.parse(fav));
+    setFavorites(getFavoriteGames());
   }, [sortBy, searchTerm, page]);
 
-  const handleFavorite = (game: Game) => {
+  const addFavorite = (game: Game) => {
     const updated = [...favorites, game];
-    setFavorites(updated);
     // Avoid duplicates
     const unique = updated.filter((g, index, self) =>
       index === self.findIndex((t) => t.project === g.project)
     );
     setFavorites(unique);
+    storageFavoriteGames(unique);
   };
 
   return (
@@ -74,14 +83,15 @@ const App: React.FC = () => {
         search={favoriteSearch}
         setSearch={setFavoriteSearch}
       />
-      <Container sx={{mt: 2}}>
+      <Container sx={{ mt: 2 }}>
         {selectedGame ? (
           <GameView game={selectedGame} onBack={() => setSelectedGame(null)} />
         ) : (
           <GameGrid
             games={games}
             onGameClick={setSelectedGame}
-            onFavorite={handleFavorite}
+            favoriteGames={favorites}
+            onFavorite={addFavorite}
             hasMore={hasMore}
             onBottomReached={() => setPage((prev) => prev + 1)}
           />
