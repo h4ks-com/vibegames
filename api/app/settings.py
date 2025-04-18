@@ -11,7 +11,10 @@ class Settings(BaseSettings):
     PROJECTS_PATH: str
     API_KEYS: list[str] | str
     DB_PATH: str
+    APP_URL: str = "http://localhost:8088"
     GPT4F_API_URL: str = "https://g4f.cloud.mattf.one"
+    CAPTURE_API_URL: str
+    CAPTURE_API_KEY: str
     PORT: int = 8080
     RELOAD: bool = False
     DEBUG: bool = False

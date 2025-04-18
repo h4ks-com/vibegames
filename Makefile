@@ -1,6 +1,6 @@
 # Include the .env file (make sure it exists and is properly formatted)
-ifneq (,$(wildcard .env))
-  include .env
+ifneq (,$(wildcard api/.env))
+  include api/.env
   export
 endif
 
@@ -23,4 +23,17 @@ run-api:
 .PHONY: run-frontend
 run-frontend:
 	cd frontend && \
-		npm run start
+		PORT=3000 npm run start
+
+.PHONY: run-webcapture
+run-webcapture:
+	docker run -it --network="host" \
+		-e API_TOKEN=$(CAPTURE_API_KEY) \
+		-e PORT=$(lastword $(subst :, ,$(subst ",,$(CAPTURE_API_URL)))) \
+		--restart=always \
+		mattfly/webcapture-service
+
+.PHONY: run
+run:
+	@$(MAKE) -j run-api run-frontend run-webcapture
+

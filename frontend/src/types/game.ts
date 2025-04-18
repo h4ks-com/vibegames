@@ -5,4 +5,5 @@ export type Game = {
   num_opens: number;
   html_path: string;
   github_url: string;
+  thumb_url: string;
 };

@@ -1,17 +1,13 @@
 import React, { memo } from 'react';
 
 type Props = {
-  baseUrl: string;
-  name: string;
+  thumbUrl: string;
 };
 
-const GameThumbnailComponent: React.FC<Props> = ({ baseUrl, name }) => {
-  const randomSeed = Math.floor(Math.random() * 1000);
-  const url = `${baseUrl}?seed=${randomSeed}&count=false`;
+const GameThumbnailComponent: React.FC<Props> = ({ thumbUrl }) => {
   return (
-    <iframe
-      src={url}
-      title={`${name} preview`}
+    <img
+      src={thumbUrl}
       style={{
         width: '100%',
         height: 200,
@@ -21,8 +17,6 @@ const GameThumbnailComponent: React.FC<Props> = ({ baseUrl, name }) => {
         backgroundColor: '#fff',
         overflow: 'hidden',
       }}
-      seamless
-      scrolling="no"
     />
   )
 };

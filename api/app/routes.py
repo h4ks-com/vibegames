@@ -1,9 +1,11 @@
 import json
+import logging
 from datetime import datetime
 from typing import Literal
 
 import pytz
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
@@ -11,6 +13,7 @@ from fastapi import Path
 from fastapi import Query
 from fastapi import Request
 from fastapi import Response
+from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from pydantic import ValidationError
@@ -19,11 +22,14 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from app import g4f
 from app import github
+from app import thumbs
 from app.auth import get_api_key
 from app.database import get_db
 from app.models import Game
+from app.settings import settings
 
 router = APIRouter()
+admin_router = APIRouter(tags=["Admin"], prefix="/admin")
 file_router = APIRouter(tags=["File management"], prefix="/api")
 ai_router = APIRouter(tags=["AI"], prefix="/api/ai")
 games_router = APIRouter(tags=["Games"], prefix="/game")
@@ -33,7 +39,7 @@ class RequestBody(BaseModel):
     content: str
 
 
-@file_router.get("/reset")
+@admin_router.get("/reset")
 def reset_db(
     _: str = Depends(get_api_key),
     db: Session = Depends(get_db),
@@ -53,6 +59,36 @@ def reset_db(
     return names
 
 
+@admin_router.get("/create_thumbnails")
+def create_thumbnails(
+    request: Request,
+    _: str = Depends(get_api_key),
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    """Create game thumbnails sequentially. Can be very slow."""
+    # Load all games from the database.
+    success = []
+    failed = []
+    games = db.query(Game).all()
+    for game in games:
+        html_path = str(request.url_for("get_game_html", project=game.project).path)
+        game_url = f"{settings.APP_URL}{html_path}"
+        logging.info(f"Creating thumbnail for {game_url}")
+        try:
+            thumbs.refresh_thumb(game_url, force_recreate=False)
+            success.append(game.project)
+        except Exception as e:
+            logging.error(f"Failed to create thumbnail for {game_url}: {e}")
+            failed.append(game.project)
+    return JSONResponse(
+        {
+            "status": "success",
+            "success": success,
+            "failed": failed,
+        }
+    )
+
+
 @file_router.put("/project/{project_name}/{file_path:path}")
 def upload_file(
     request: Request,
@@ -61,7 +97,7 @@ def upload_file(
     file_path: str = Path(..., description="File path"),
     auth: str = Depends(get_api_key),
     db: Session = Depends(get_db),
-) -> dict:
+) -> JSONResponse:
     """
     Update or create a file inside a project folder in GitHub.
     - If the project does not exist in the database, create a new row.
@@ -83,10 +119,21 @@ def upload_file(
         game.date_modified = now
         flag_modified(game, "date_modified")
     db.commit()
-    return {
-        "status": "success",
-        "html_path": str(request.url_for("get_game_html", project=game.project).path),
-    }
+    html_path = str(request.url_for("get_game_html", project=game.project).path)
+
+    # TODO might not need to create a thumb for every file
+    thumb_url = thumbs.get_thumb_url(f"{settings.APP_URL}{html_path}")
+    background_tasks = BackgroundTasks()
+    background_tasks.add_task(thumbs.refresh_thumb, f"{settings.APP_URL}{html_path}")
+    response = JSONResponse(
+        {
+            "status": "success",
+            "html_path": html_path,
+            "thumb_url": thumb_url,
+        }
+    )
+    response.background = background_tasks
+    return response
 
 
 def update_context_json(project_name: str, project: g4f.Project) -> None:
@@ -107,7 +154,7 @@ def create_ai_project(
     project_name: str = Path(..., description="Project name"),
     auth: str = Depends(get_api_key),
     db: Session = Depends(get_db),
-) -> dict:
+) -> JSONResponse:
     """
     Create a new project in GitHub using G4F API.
     - The project will be created under the specified path.
@@ -142,7 +189,7 @@ def update_ai_project(
     project_name: str = Path(..., description="Project name"),
     auth: str = Depends(get_api_key),
     db: Session = Depends(get_db),
-) -> dict:
+) -> JSONResponse:
     """
     Update an existing project in GitHub using G4F API.
     - The project will be updated under the specified path.
@@ -245,14 +292,17 @@ def list_games(
     # Build API relative path for fetching HTML of each game.
     results: list[dict] = []
     for game in games:
+        html_path = str(request.url_for("get_game_html", project=game.project).path)
+        thumb_url = thumbs.get_thumb_url(f"{settings.APP_URL}{html_path}")
         results.append(
             {
                 "project": game.project,
                 "date_added": game.date_added,
                 "date_modified": game.date_modified,
                 "num_opens": game.num_opens,
-                "html_path": str(request.url_for("get_game_html", project=game.project).path),
+                "html_path": html_path,
                 "github_url": github.get_file_url(game.project),
+                "thumb_url": thumb_url,
             }
         )
     return results
@@ -287,3 +337,4 @@ def delete_project(
 router.include_router(ai_router)
 router.include_router(file_router)
 router.include_router(games_router)
+router.include_router(admin_router)

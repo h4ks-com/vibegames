@@ -13,7 +13,7 @@ type Props = {
 };
 
 export const GameCard: React.FC<Props> = ({ game, onGameClick, onFavorite, isFavorite, ref }) => {
-  const url = `${process.env.REACT_APP_API_URL}/game/${game.project}`;
+  const thumbUrl = game.thumb_url
   const handleGameClick = () => { onGameClick(game) };
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -24,8 +24,7 @@ export const GameCard: React.FC<Props> = ({ game, onGameClick, onFavorite, isFav
       <Typography variant="h6">{game.project}</Typography>
       <div onClick={handleGameClick} style={{ cursor: 'pointer' }}>
         <GameThumbnail
-          name={game.project}
-          baseUrl={url}
+          thumbUrl={thumbUrl}
           key={game.project}
         />
       </div>
@@ -37,7 +36,7 @@ export const GameCard: React.FC<Props> = ({ game, onGameClick, onFavorite, isFav
         Last Edited: {new Date(game.date_modified).toLocaleDateString()}
       </Typography>
       <Typography>
-        <Link href={url} target="_blank">
+        <Link href={thumbUrl} target="_blank">
           Open in new tab
         </Link>
       </Typography>
