@@ -56,7 +56,7 @@ export const GameView: React.FC<Props> = ({ game, onBack }) => {
             </IconButton>
           </Tooltip>
           <IconButton
-            onClick={() => window.open(`/game/${game.project}`, '_blank')}
+            onClick={() => window.open(`/game/${game.github_url}`, '_blank')}
             aria-label="View on GitHub"
           >
             <GitHubIcon />
