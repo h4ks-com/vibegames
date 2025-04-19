@@ -11,6 +11,10 @@ class GithubFileNotFoundError(Exception):
     """Custom exception for file not found in GitHub repository."""
 
 
+class GithubNoLastCommitError(Exception):
+    """Custom exception for no last commit found in GitHub repository."""
+
+
 @lru_cache
 def get_repo_owner_and_name(repo_url: str) -> tuple[str, str]:
     repo_url = settings.GITHUB_REPOSITORY
@@ -84,6 +88,29 @@ def get_file_url(project: str, path: str | None = None) -> str:
     return f"https://www.github.com/{repo_owner}/{repo_name}/blob/main/{settings.PROJECTS_PATH}/{project}/{path or 'index.html'}"
 
 
+def delete_file(project: str, path: str) -> None:
+    repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
+    api_url = (
+        f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{settings.PROJECTS_PATH}/{project}/{path}"
+    )
+    headers = {"Authorization": f"token {settings.GITHUB_API_TOKEN}"}
+    # Get the SHA of the file to delete
+    get_resp = requests.get(api_url, headers=headers)
+    if get_resp.status_code == 404:
+        raise GithubFileNotFoundError(f"File not found: {path}")
+    get_resp.raise_for_status()
+    file_info = get_resp.json()
+    sha = file_info.get("sha")
+    body = {
+        "message": "Delete file via API",
+        "sha": sha,
+    }
+    resp = requests.delete(api_url, headers=headers, json=body)
+    resp.raise_for_status()
+    if resp.status_code != 200:
+        raise GithubFileNotFoundError(f"File not found: {path}")
+
+
 def delete_project(project: str) -> None:
     repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
     # Loop through all files in the project and delete them
@@ -135,3 +162,37 @@ def is_last_committer_token_user(project: str, path: str) -> bool:
     last_committer = commits[0]["commit"]["author"]["name"]
 
     return token_user == last_committer
+
+
+def revert_file_to_previous_commit(project: str, path: str) -> None:
+    """
+    Reverts a file to its previous commit version.
+    Raises GithubFileNotFoundError if the file doesn't exist.
+    """
+    repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
+    file_path = f"{settings.PROJECTS_PATH}/{project}/{path}"
+
+    headers = {"Authorization": f"token {settings.GITHUB_API_TOKEN}"}
+    commits_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/commits"
+    params = {"path": file_path}
+
+    resp = requests.get(commits_url, headers=headers, params=params)
+    resp.raise_for_status()
+
+    commits = resp.json()
+    if not commits:
+        raise GithubFileNotFoundError(f"File not found or has no commit history: {path}")
+
+    # Get the last commit SHA for this specific file
+    if len(commits) < 2:
+        raise GithubNoLastCommitError(f"No previous commit found for file: {path}")
+
+    last_commit_sha = commits[1]["sha"]
+    content_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}?ref={last_commit_sha}"
+
+    content_resp = requests.get(content_url, headers=headers)
+    if content_resp.status_code != 200:
+        raise GithubFileNotFoundError(f"Could not retrieve file version: {path}")
+
+    file_content = base64.b64decode(content_resp.json()["content"]).decode()
+    update_or_create_file(path, file_content, project)

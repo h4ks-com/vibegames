@@ -355,6 +355,58 @@ def delete_project(
     return {"status": "success"}
 
 
+@file_router.get("/revert_project/{project_name}")
+def revert_project(
+    request: Request,
+    project_name: str = Path(..., description="Project name"),
+    _: str = Depends(get_api_key),
+    db: Session = Depends(get_db),
+) -> JSONResponse:
+    """
+    Revert a project to the last commit.
+    - The project will be reverted from GitHub.
+    """
+    # Raise an error if the project does not exist.
+    game: Game | None = db.query(Game).filter(Game.project == project_name).first()
+    if game is None:
+        raise HTTPException(status_code=400, detail="Project does not exist")
+
+    try:
+        github.revert_file_to_previous_commit(project_name, "index.html")
+    except github.GithubFileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found")
+    except github.GithubNoLastCommitError:
+        raise HTTPException(status_code=400, detail="No previous commit found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # Delete context.json if it exists.
+    try:
+        github.delete_file(project_name, "context.json")
+    except github.GithubFileNotFoundError:
+        pass
+
+    # Update the modification timestamp in the database.
+    game.date_modified = datetime.now(pytz.utc)
+    flag_modified(game, "date_modified")
+    db.commit()
+
+    # Refresh the thumbnail.
+    html_path = str(request.url_for("get_game_html", project=game.project).path)
+    thumb_url = thumbs.get_thumb_url(f"{settings.APP_URL}{html_path}")
+    background_tasks = BackgroundTasks()
+    background_tasks.add_task(thumbs.refresh_thumb, f"{settings.APP_URL}{html_path}")
+    response = JSONResponse(
+        {
+            "status": "success",
+            "html_path": html_path,
+            "thumb_url": thumb_url,
+        }
+    )
+    response.background = background_tasks
+    return response
+
+
 router.include_router(ai_router)
 router.include_router(file_router)
 router.include_router(games_router)
