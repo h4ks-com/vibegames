@@ -212,6 +212,13 @@ def update_ai_project(
     except ValidationError as e:
         raise HTTPException(status_code=400, detail="Invalid context file format") from e
 
+    # try:
+    #     code = github.get_file_content(project_name)
+    # except github.GithubFileNotFoundError:
+    #     code = None
+
+    # # if code and code !=
+
     try:
         project = g4f.edit_project(messages, prompt)
     except ValueError as e:

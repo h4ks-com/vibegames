@@ -95,6 +95,11 @@ const App: React.FC = () => {
         favorites={favorites}
         search={favoriteSearch}
         setSearch={setFavoriteSearch}
+        onDeleteFavorite={(game) => {
+          const updated = favorites.filter((g) => g.project !== game.project);
+          setFavorites(updated);
+          storageFavoriteGames(updated);
+        }}
       />
       <Container sx={{ mt: 2 }}>
         {selectedGame ? (

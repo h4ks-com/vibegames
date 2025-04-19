@@ -1,7 +1,8 @@
 import React from 'react';
-import { Drawer, Container, Typography, TextField, List, ListItem, ListItemText } from '@mui/material';
+import { Drawer, Container, Typography, TextField, List, ListItem, ListItemText, IconButton } from '@mui/material';
 import { Game } from '../types/game';
 import { ClearAdorment } from './ClearAdorment';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function openGameInNewTab(game: Game) {
   window.open(`${process.env.REACT_APP_API_URL}${game.html_path}`, '_blank');
@@ -13,9 +14,10 @@ type Props = {
   favorites: Game[];
   search: string;
   setSearch: (s: string) => void;
+  onDeleteFavorite: (game: Game) => void;
 };
 
-export const Sidebar: React.FC<Props> = ({ open, onClose, favorites, search, setSearch }) => {
+export const Sidebar: React.FC<Props> = ({ open, onClose, favorites, search, setSearch, onDeleteFavorite }) => {
   const filtered = favorites.filter((g) =>
     g.project.toLowerCase().includes(search.toLowerCase())
   );
@@ -45,6 +47,14 @@ export const Sidebar: React.FC<Props> = ({ open, onClose, favorites, search, set
           {filtered.map((fav) => (
             <ListItem
               key={fav.project}
+              secondaryAction={
+                <IconButton edge="end" onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteFavorite(fav);
+                }}>
+                  <DeleteIcon />
+                </IconButton>
+              }
               onClick={() => openGameInNewTab(fav)}
               sx={{
                 cursor: 'pointer',
