@@ -31,6 +31,7 @@ run-webcapture:
 		-e API_TOKEN=$(CAPTURE_API_KEY) \
 		-e PORT=$(lastword $(subst :, ,$(subst ",,$(CAPTURE_API_URL)))) \
 		--restart=always \
+		-v tmp-data:/tmp/capture \
 		mattfly/webcapture-service
 
 .PHONY: run

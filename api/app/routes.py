@@ -64,6 +64,7 @@ def create_thumbnails(
     request: Request,
     _: str = Depends(get_api_key),
     db: Session = Depends(get_db),
+    force_recreate: bool = Query(False, description="Force recreate thumbnails"),
 ) -> JSONResponse:
     """Create game thumbnails sequentially. Can be very slow."""
     # Load all games from the database.
@@ -75,7 +76,7 @@ def create_thumbnails(
         game_url = f"{settings.APP_URL}{html_path}"
         logging.info(f"Creating thumbnail for {game_url}")
         try:
-            thumbs.refresh_thumb(game_url, force_recreate=False)
+            thumbs.refresh_thumb(game_url, force_recreate=force_recreate)
             success.append(game.project)
         except Exception as e:
             logging.error(f"Failed to create thumbnail for {game_url}: {e}")
