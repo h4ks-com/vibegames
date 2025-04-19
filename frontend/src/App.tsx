@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ThemeProvider, Container } from '@mui/material';
 import { Game } from './types/game';
 import theme from './theme';
@@ -29,6 +29,7 @@ const App: React.FC = () => {
   const [favorites, setFavorites] = useState<Game[]>(getFavoriteGames());
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const scrollRef = useRef(0);
 
   const fetchGames = async () => {
     const res = await axios.get<Game[]>(`${process.env.REACT_APP_API_URL}/api/games`, {
@@ -68,6 +69,18 @@ const App: React.FC = () => {
     storageFavoriteGames(unique);
   };
 
+  const handleGameClick = (game: Game) => {
+    scrollRef.current = window.scrollY;
+    setSelectedGame(game);
+  };
+
+  useEffect(() => {
+    if (!selectedGame && scrollRef.current) {
+      window.scrollTo(0, scrollRef.current);
+      scrollRef.current = 0;
+    }
+  }, [selectedGame]);
+
   return (
     <ThemeProvider theme={theme} >
       <TopAppBar
@@ -89,7 +102,7 @@ const App: React.FC = () => {
         ) : (
           <GameGrid
             games={games}
-            onGameClick={setSelectedGame}
+            onGameClick={handleGameClick}
             favoriteGames={favorites}
             onFavorite={addFavorite}
             hasMore={hasMore}
