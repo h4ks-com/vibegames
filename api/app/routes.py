@@ -207,17 +207,30 @@ def update_ai_project(
         messages = g4f.Context.model_validate_json(context_str).messages
     except github.GithubFileNotFoundError:
         messages = []
+        try:
+            content = github.get_file_content(project_name, "index.html")
+            messages.append(
+                g4f.Message(
+                    role="user",
+                    content=f"Please use the following code as a base to update:\n```\n{content}\n```",
+                )
+            )
+        except github.GithubFileNotFoundError:
+            pass
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=400, detail="Invalid context file") from e
     except ValidationError as e:
         raise HTTPException(status_code=400, detail="Invalid context file format") from e
 
-    # try:
-    #     code = github.get_file_content(project_name)
-    # except github.GithubFileNotFoundError:
-    #     code = None
-
-    # # if code and code !=
+    # We need to make the bot aware if the user is the last committer of the file.
+    if not github.is_last_committer_token_user(project_name, "index.html"):
+        content = github.get_file_content(project_name, "index.html")
+        messages.append(
+            g4f.Message(
+                role="user",
+                content=f"I have modified the codebase to:\n```\n{content}\n```. Please use this as a base to update the code.",
+            )
+        )
 
     try:
         project = g4f.edit_project(messages, prompt)

@@ -24,6 +24,15 @@ def get_repo_owner_and_name(repo_url: str) -> tuple[str, str]:
     return repo_owner, repo_name
 
 
+@lru_cache
+def get_token_user() -> str:
+    """Returns the username of the authenticated GitHub user."""
+    headers = {"Authorization": f"token {settings.GITHUB_API_TOKEN}"}
+    resp = requests.get("https://api.github.com/user", headers=headers)
+    resp.raise_for_status()
+    return resp.json()["login"]
+
+
 def update_or_create_file(path: str, content: str, project: str) -> None:
     repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
     # Construct the GitHub API URL.
@@ -101,3 +110,28 @@ def get_projects() -> list[str]:
     resp = requests.get(api_url, headers=headers)
     resp.raise_for_status()
     return [item["name"] for item in resp.json() if item["type"] == "dir"]
+
+
+def is_last_committer_token_user(project: str, path: str) -> bool:
+    """
+    Checks if the last person who committed to a file is the same as the token user.
+    Returns True if the last committer matches the token user, False otherwise.
+    """
+    repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
+    file_path = f"{settings.PROJECTS_PATH}/{project}/{path}"
+
+    headers = {"Authorization": f"token {settings.GITHUB_API_TOKEN}"}
+    commits_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/commits"
+    params: dict[str, str | int] = {"path": file_path, "per_page": 1}
+
+    resp = requests.get(commits_url, headers=headers, params=params)
+    resp.raise_for_status()
+
+    commits = resp.json()
+    if not commits:
+        return False
+
+    token_user = get_token_user()
+    last_committer = commits[0]["commit"]["author"]["name"]
+
+    return token_user == last_committer
