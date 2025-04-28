@@ -21,8 +21,14 @@ const storageFavoriteGames = (games: Game[]) => {
 
 const App: React.FC = () => {
   const [games, setGames] = useState<Game[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortByOptions>('hottest');
+  const [searchTerm, setSearchTerm] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('search');
+  });
+  const [sortBy, setSortBy] = useState<SortByOptions>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return (params.get('sort') as SortByOptions) || 'hottest';
+  });
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [favoriteSearch, setFavoriteSearch] = useState('');
@@ -84,6 +90,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme} >
       <TopAppBar
+        initialSearch={searchTerm}
         onSearch={setSearchTerm}
         onSortChange={setSortBy}
         sortBy={sortBy}

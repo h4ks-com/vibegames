@@ -6,6 +6,7 @@ import { SortByOptions } from '../types/api';
 import { ClearAdorment } from './ClearAdorment';
 
 type Props = {
+  initialSearch: string | null;
   onSearch: (v: string | null) => void;
   onSortChange: (v: SortByOptions) => void;
   sortBy: SortByOptions;
@@ -13,14 +14,33 @@ type Props = {
 };
 
 export const TopAppBar: React.FC<Props> = ({
+  initialSearch,
   onSearch,
   onSortChange,
   sortBy,
   openDrawer,
 }) => {
-  const [textValue, setTextValue] = useState('');
+  const [textValue, setTextValue] = useState(initialSearch || '');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const handleSearch = (query: string) => {
+    onSearch(query);
+    const url = new URL(window.location.href);
+    if (query) {
+      url.searchParams.set('search', query);
+    } else {
+      url.searchParams.delete('search');
+    }
+    window.history.pushState({}, '', url.toString());
+  };
+
+  const handleSort = (value: SortByOptions) => {
+    onSortChange(value);
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', value);
+    window.history.pushState({}, '', url.toString());
+  };
 
   return (
     <AppBar position="static">
@@ -41,7 +61,7 @@ export const TopAppBar: React.FC<Props> = ({
           size="small"
           value={textValue}
           onChange={(e) => setTextValue(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && onSearch(textValue)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch(textValue)}
           sx={{
             borderRadius: 1,
             flexGrow: isMobile ? 1 : 0,
@@ -58,7 +78,7 @@ export const TopAppBar: React.FC<Props> = ({
           }}
         />
         <Button variant="contained" color="primary" sx={{ ml: 1 }} onClick={() => {
-          onSearch(textValue);
+          handleSearch(textValue);
         }}>
           Search
         </Button>
@@ -68,7 +88,7 @@ export const TopAppBar: React.FC<Props> = ({
             size='small'
             value={sortBy}
             label="Sort By"
-            onChange={(e) => onSortChange(e.target.value as SortByOptions)}
+            onChange={(e) => handleSort(e.target.value as SortByOptions)}
             sx={{ ml: 2, mr: 5, borderRadius: 1, flexGrow: 0, minWidth: 120, width: '10%' }}
           >
             <MenuItem value={"hottest"}>Hot</MenuItem>
