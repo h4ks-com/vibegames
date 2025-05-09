@@ -14,7 +14,6 @@ from fastapi import Query
 from fastapi import Request
 from fastapi import Response
 from fastapi.responses import JSONResponse
-from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -259,11 +258,6 @@ def get_game_html(
     Retrieve the HTML for a game project from GitHub.
     The endpoint attempts to fetch `index.html` under the project's directory.
     """
-
-    # If there is any query parameter, redirect to the page without it to make the url cleaner.
-    if request.query_params and "count" not in request.query_params:
-        url = request.url_for("get_game_html", project=project)
-        return RedirectResponse(url)
 
     try:
         content = github.get_file_content(project)
