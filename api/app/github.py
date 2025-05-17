@@ -92,7 +92,6 @@ def get_raw_file_content(project: str, path: str | None = None) -> bytes:
         base_url,
         headers={"Authorization": f"token {settings.GITHUB_API_TOKEN}"},
     )
-    print(base_url)
     if resp.status_code == 200:
         json_data = resp.json()
         if "download_url" in json_data:

@@ -1,5 +1,6 @@
 import json
 import logging
+import mimetypes
 from datetime import datetime
 from typing import Literal
 
@@ -288,18 +289,7 @@ def get_raw_file(
         content = github.get_raw_file_content(project, file_path)
     except github.GithubFileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-    extension = file_path.split(".")[-1]
-    if extension in ["js", "css"]:
-        media_type = "text/javascript" if extension == "js" else "text/css"
-    elif extension == "json":
-        media_type = "application/json"
-    elif extension == "html":
-        media_type = "text/html"
-    elif extension in ["png", "jpg", "jpeg", "gif"]:
-        media_type = f"image/{extension}"
-    else:
-        media_type = "text/plain"
+    media_type = mimetypes.guess_type(file_path)[0]
     return Response(content, media_type=media_type)
 
 
