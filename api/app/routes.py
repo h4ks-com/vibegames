@@ -275,6 +275,34 @@ def get_game_html(
     return Response(content, media_type="text/html")
 
 
+@games_router.get("/{project}/{file_path:path}")
+def get_raw_file(
+    project: str,
+    file_path: str,
+) -> Response:
+    """
+    Retrieve a raw file from a game project in GitHub.
+    The endpoint attempts to fetch the specified file under the project's directory.
+    """
+    try:
+        content = github.get_raw_file_content(project, file_path)
+    except github.GithubFileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    extension = file_path.split(".")[-1]
+    if extension in ["js", "css"]:
+        media_type = "text/javascript" if extension == "js" else "text/css"
+    elif extension == "json":
+        media_type = "application/json"
+    elif extension == "html":
+        media_type = "text/html"
+    elif extension in ["png", "jpg", "jpeg", "gif"]:
+        media_type = f"image/{extension}"
+    else:
+        media_type = "text/plain"
+    return Response(content, media_type=media_type)
+
+
 @file_router.get("/games")
 def list_games(
     request: Request,

@@ -82,6 +82,36 @@ def get_file_content(project: str, path: str | None = None) -> str:
         raise GithubFileNotFoundError(f"File not found: {base_url}")
 
 
+def get_raw_file_content(project: str, path: str | None = None) -> bytes:
+    repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
+    base_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{settings.PROJECTS_PATH}/{project}"
+
+    path = path or "index.html"
+    base_url = f"{base_url}/{path}"
+    resp = requests.get(
+        base_url,
+        headers={"Authorization": f"token {settings.GITHUB_API_TOKEN}"},
+    )
+    print(base_url)
+    if resp.status_code == 200:
+        json_data = resp.json()
+        if "download_url" in json_data:
+            # If the file is large, GitHub provides a download URL
+            download_url = json_data["download_url"]
+            resp = requests.get(download_url, headers={"Authorization": f"token {settings.GITHUB_API_TOKEN}"})
+            resp.raise_for_status()
+            return resp.content
+        # Decode the content from base64
+        content = json_data.get("content")
+        if content:
+            decoded_content = base64.b64decode(content)
+            return decoded_content
+        else:
+            raise GithubFileNotFoundError(f"File content is empty: {base_url}")
+    else:
+        raise GithubFileNotFoundError(f"File not found: {base_url}")
+
+
 def get_file_url(project: str, path: str | None = None) -> str:
     """Returns github UI URL to the file."""
     repo_owner, repo_name = get_repo_owner_and_name(settings.GITHUB_REPOSITORY)
