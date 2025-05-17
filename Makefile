@@ -13,7 +13,15 @@ check-full:
 	poetry -P api run pre-commit run --all-files
 
 .PHONY: check-staged
+check-staged:
 	poetry -P api run pre-commit run --staged-files
+
+.PHONY: create-api-migrations
+create-api-migrations:
+	ifndef (msg)
+		${error} "Please provide a message for the migration with 'make create-api-migrations msg='<your message>'"
+	endif
+	poetry run alembic revision --autogenerate -m "$(msg)"
 
 .PHONY: run-api
 run-api:

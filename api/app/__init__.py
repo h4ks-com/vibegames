@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.database import engine
+from app.db_migrations import run_migrations
 from app.models import Base
 from app.routes import router
 from app.settings import settings
@@ -19,6 +20,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     # Create the database and tables if they do not exist.
     try:
         Base.metadata.create_all(bind=engine)
+        run_migrations()
     except Exception:
         logging.error(f"Error creating database table at {settings.DB_PATH}")
         raise
