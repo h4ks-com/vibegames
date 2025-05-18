@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import mimetypes
@@ -38,6 +39,7 @@ games_router = APIRouter(tags=["Games"], prefix="/game")
 
 class RequestBody(BaseModel):
     content: str
+    encoding: Literal["base64"] | None = None
 
 
 @admin_router.get("/reset")
@@ -156,7 +158,14 @@ def upload_file(
     if game is not None and game.locked:
         raise HTTPException(status_code=403, detail="Project is locked")
 
-    content = body.content
+    if body.encoding == "base64":
+        try:
+            content = base64.b64decode(body.content).decode("utf-8")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="Invalid base64 content") from e
+    else:
+        content = body.content
+
     try:
         github.update_or_create_file(file_path, content, project_name)
     except Exception as e:
@@ -168,8 +177,6 @@ def upload_file(
         game = Game(project=project_name, date_added=now, date_modified=now, num_opens=0)
         db.add(game)
     else:
-        if game.locked:
-            raise HTTPException(status_code=403, detail="Project is locked")
         game.date_modified = now
         flag_modified(game, "date_modified")
     db.commit()
