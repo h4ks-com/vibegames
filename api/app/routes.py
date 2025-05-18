@@ -152,6 +152,10 @@ def upload_file(
     - If the project does not exist in the database, create a new row.
     - If it exists, update the modification timestamp.
     """
+    game: Game | None = db.query(Game).filter(Game.project == project_name).first()
+    if game is not None and game.locked:
+        raise HTTPException(status_code=403, detail="Project is locked")
+
     content = body.content
     try:
         github.update_or_create_file(file_path, content, project_name)
@@ -159,7 +163,6 @@ def upload_file(
         raise HTTPException(status_code=500, detail=str(e))
 
     # Update database entry.
-    game: Game | None = db.query(Game).filter(Game.project == project_name).first()
     now = datetime.now(pytz.utc)
     if game is None:
         game = Game(project=project_name, date_added=now, date_modified=now, num_opens=0)
