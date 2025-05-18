@@ -251,6 +251,8 @@ def update_ai_project(
     game: Game | None = db.query(Game).filter(Game.project == project_name).first()
     if game is None:
         raise HTTPException(status_code=400, detail="Project does not exist")
+    if game.locked:
+        raise HTTPException(status_code=403, detail="Project is locked")
 
     try:
         context_str = github.get_file_content(project_name, "context.json")
@@ -411,6 +413,8 @@ def delete_project(
     game: Game | None = db.query(Game).filter(Game.project == project_name).first()
     if game is None:
         raise HTTPException(status_code=400, detail="Project does not exist")
+    if game.locked:
+        raise HTTPException(status_code=403, detail="Project is locked")
 
     try:
         github.delete_project(project_name)
@@ -437,6 +441,8 @@ def revert_project(
     game: Game | None = db.query(Game).filter(Game.project == project_name).first()
     if game is None:
         raise HTTPException(status_code=400, detail="Project does not exist")
+    if game.locked:
+        raise HTTPException(status_code=403, detail="Project is locked")
 
     try:
         github.revert_file_to_previous_commit(project_name, "index.html")
