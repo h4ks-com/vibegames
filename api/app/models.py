@@ -6,6 +6,7 @@ from sqlalchemy import String
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
+from sqlalchemy.types import Boolean
 
 from app.database import Base
 
@@ -20,3 +21,4 @@ class Game(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
     num_opens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    locked: Mapped[bool] = mapped_column(Boolean, default=0, nullable=False)

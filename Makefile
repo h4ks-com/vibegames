@@ -18,10 +18,14 @@ check-staged:
 
 .PHONY: create-api-migrations
 create-api-migrations:
-	ifndef (msg)
-		${error} "Please provide a message for the migration with 'make create-api-migrations msg='<your message>'"
-	endif
-	poetry run alembic revision --autogenerate -m "$(msg)"
+ifndef msg
+	$(error "Please provide a message for the migration with 'make create-api-migrations msg='<your message>'")
+endif
+	cd api && poetry run alembic revision --autogenerate -m "$(msg)"
+
+.PHONY: undo-api-revision
+undo-api-revision:
+	cd api && poetry run alembic downgrade base && poetry run alembic stamp head
 
 .PHONY: run-api
 run-api:

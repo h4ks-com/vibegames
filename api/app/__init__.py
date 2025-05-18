@@ -21,9 +21,9 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     try:
         Base.metadata.create_all(bind=engine)
         run_migrations()
-    except Exception:
-        logging.error(f"Error creating database table at {settings.DB_PATH}")
-        raise
+    except Exception as e:
+        logging.error(f"Error creating database table at {settings.DB_PATH}: {e}")
+        raise e
     yield
 
 

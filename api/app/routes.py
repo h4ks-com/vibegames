@@ -15,6 +15,7 @@ from fastapi import Query
 from fastapi import Request
 from fastapi import Response
 from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -90,6 +91,53 @@ def create_thumbnails(
     )
 
 
+class LockRequest(BaseModel):
+    locked: bool = True
+
+
+@admin_router.put("/lock/{project_name}")
+def lock_project(
+    lock_request: LockRequest = Body(..., description="Lock project"),
+    project_name: str = Path(..., description="Project name"),
+    _: str = Depends(get_api_key),
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    Lock a project
+    - The project will be locked from AI or public API modifications.
+    """
+    # Raise an error if the project does not exist.
+    game: Game | None = db.query(Game).filter(Game.project == project_name).first()
+    if game is None:
+        raise HTTPException(status_code=400, detail="Project does not exist")
+
+    game.locked = lock_request.locked
+    db.commit()
+    return {"status": "success"}
+
+
+@admin_router.put("/import/{project_name}")
+def import_project(
+    project_name: str = Path(..., description="Project name"),
+    _: str = Depends(get_api_key),
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    Import a project
+    - The project will be imported from GitHub.
+    - This just makes the API aware of the project.
+    """
+    # Raise an error if the project already exists.
+    game: Game | None = db.query(Game).filter(Game.project == project_name).first()
+    if game is not None:
+        raise HTTPException(status_code=400, detail="Project already exists")
+    db.add(
+        Game(project=project_name, date_added=datetime.now(pytz.utc), date_modified=datetime.now(pytz.utc), num_opens=0)
+    )
+    db.commit()
+    return {"status": "success"}
+
+
 @file_router.put("/project/{project_name}/{file_path:path}")
 def upload_file(
     request: Request,
@@ -117,6 +165,8 @@ def upload_file(
         game = Game(project=project_name, date_added=now, date_modified=now, num_opens=0)
         db.add(game)
     else:
+        if game.locked:
+            raise HTTPException(status_code=403, detail="Project is locked")
         game.date_modified = now
         flag_modified(game, "date_modified")
     db.commit()
@@ -259,6 +309,11 @@ def get_game_html(
     Retrieve the HTML for a game project from GitHub.
     The endpoint attempts to fetch `index.html` under the project's directory.
     """
+    # Add forward slash to the end of the project name if not present.
+    if not request.url.path.endswith("/"):
+        # redirect to the new URL
+        redirect_url = str(request.url_for("get_game_html", project=project).path) + "/"
+        return RedirectResponse(url=redirect_url)
 
     try:
         content = github.get_file_content(project)
