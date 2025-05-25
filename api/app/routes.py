@@ -310,7 +310,7 @@ def update_ai_project(
     )
 
 
-@games_router.get("/{project}")
+@games_router.get("/{project}/")
 def get_game_html(
     project: str,
     request: Request,
@@ -321,12 +321,6 @@ def get_game_html(
     Retrieve the HTML for a game project from GitHub.
     The endpoint attempts to fetch `index.html` under the project's directory.
     """
-    # Add forward slash to the end of the project name if not present.
-    if not request.url.path.endswith("/"):
-        # redirect to the new URL
-        redirect_url = str(request.url_for("get_game_html", project=project).path) + "/"
-        return RedirectResponse(url=redirect_url)
-
     try:
         content = github.get_file_content(project)
     except github.GithubFileNotFoundError as e:
@@ -341,6 +335,21 @@ def get_game_html(
             db.commit()
 
     return Response(content, media_type="text/html")
+
+
+@games_router.get("/{project}", include_in_schema=False)
+def redicrect_to_game_html(
+    project: str,
+    request: Request,
+    count: bool = True,
+) -> RedirectResponse:
+    """
+    Redirect to the HTML for a game project from GitHub.
+    The endpoint attempts to fetch `index.html` under the project's directory.
+    """
+    # redirect to the new URL
+    redirect_url = str(request.url_for("get_game_html", project=project).path)
+    return RedirectResponse(url=redirect_url)
 
 
 @games_router.get("/{project}/{file_path:path}")

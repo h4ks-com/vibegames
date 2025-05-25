@@ -19,4 +19,5 @@ if __name__ == "__main__":
         reload=settings.RELOAD,
         workers=WORKERS,
         timeout_keep_alive=15,
+        log_level="info",
     )
