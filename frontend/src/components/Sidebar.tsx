@@ -5,7 +5,7 @@ import { ClearAdorment } from './ClearAdorment';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 function openGameInNewTab(game: Game) {
-  window.open(`${process.env.REACT_APP_API_URL}${game.html_path}`, '_blank');
+  window.open(game.subdomain_url || game.path_url, '_blank');
 }
 
 type Props = {

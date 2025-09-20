@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     PORT: int = 8080
     RELOAD: bool = False
     DEBUG: bool = False
+    ENABLE_SUBDOMAINS: bool = False
+    BASE_DOMAIN: str = "games.h4ks.com"
 
     # API keys can be a single string or a comma-separated list
     @model_validator(mode="before")

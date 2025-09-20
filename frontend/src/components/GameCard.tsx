@@ -36,7 +36,7 @@ export const GameCard: React.FC<Props> = ({ game, onGameClick, onFavorite, isFav
         </IconButton>
         <IconButton
           size="small"
-          onClick={() => window.open(`${process.env.REACT_APP_API_URL}${game.html_path}`, '_blank')}
+          onClick={() => window.open(game.subdomain_url || game.path_url, '_blank')}
         >
           <OpenInNewIcon />
         </IconButton>

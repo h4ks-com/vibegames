@@ -24,7 +24,7 @@ export const GameView: React.FC<Props> = ({ game, onBack }) => {
     <Paper sx={{ p: 2, position: 'relative', minHeight: '80vh' }}>
       <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
         <IconButton
-          onClick={() => window.open(`${process.env.REACT_APP_API_URL}/game/${game.project}`, '_blank')}
+          onClick={() => window.open(game.subdomain_url || game.path_url, '_blank')}
         >
           <OpenInNewIcon />
         </IconButton>
@@ -67,7 +67,7 @@ export const GameView: React.FC<Props> = ({ game, onBack }) => {
         {game.project}
       </Typography>
       <iframe
-        src={`${process.env.REACT_APP_API_URL}/game/${game.project}`}
+        src={game.subdomain_url || game.path_url}
         title={game.project}
         style={{ width: '100%', height: '70vh', border: 'none', backgroundColor: '#fff' }}
         sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-pointer-lock"
