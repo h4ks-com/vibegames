@@ -28,10 +28,9 @@ from app import thumbs
 from app.auth import get_api_key
 from app.database import get_db
 from app.models import Game
+from app.project_naming import find_project_by_name_case_insensitive
+from app.project_naming import sanitize_project_name
 from app.settings import settings
-from app.utils import extract_subdomain
-from app.utils import get_host_from_headers
-from app.utils import sanitize_project_name
 
 router = APIRouter()
 admin_router = APIRouter(tags=["Admin"], prefix="/admin")
@@ -40,57 +39,8 @@ ai_router = APIRouter(tags=["AI"], prefix="/api/ai")
 games_router = APIRouter(tags=["Games"], prefix="/game")
 
 
-def find_project_by_name(db: Session, project_name: str) -> Game | None:
-    """
-    Find a project by name, checking both original and sanitized names for backwards compatibility.
-
-    Args:
-        db: Database session
-        project_name: Project name to search for
-
-    Returns:
-        Game object if found, None otherwise
-    """
-    # First try exact match
-    game = db.query(Game).filter(Game.project == project_name).first()
-    if game:
-        return game
-
-    # If not found, try to find by sanitized name
-    sanitized = sanitize_project_name(project_name)
-    if sanitized != project_name:
-        game = db.query(Game).filter(Game.project == sanitized).first()
-        if game:
-            return game
-
-    # Also try to find original name that would sanitize to the given name
-    all_games = db.query(Game).all()
-    for game in all_games:
-        if sanitize_project_name(game.project) == sanitized:
-            return game
-
-    return None
-
-
-def get_project_from_request(request: Request, project_path: str | None = None) -> str | None:
-    """
-    Get project name from request, checking subdomain first if enabled.
-
-    Args:
-        request: FastAPI request object
-        project_path: Optional project name from URL path
-
-    Returns:
-        Project name if found, None otherwise
-    """
-    if settings.ENABLE_SUBDOMAINS:
-        host = get_host_from_headers(dict(request.headers))
-        if host:
-            subdomain = extract_subdomain(host, settings.BASE_DOMAIN)
-            if subdomain:
-                return subdomain
-
-    return project_path
+# Use the case-insensitive function from project_naming instead
+find_project_by_name = find_project_by_name_case_insensitive
 
 
 class RequestBody(BaseModel):
@@ -164,9 +114,8 @@ def lock_project(
     Lock a project
     - The project will be locked from AI or public API modifications.
     """
-    # Sanitize project name and find with backwards compatibility
-    sanitized_name = sanitize_project_name(project_name)
-    game: Game | None = find_project_by_name(db, sanitized_name)
+    # Find project with backwards compatibility
+    game: Game | None = find_project_by_name(db, project_name)
     if game is None:
         raise HTTPException(status_code=400, detail="Project does not exist")
 
@@ -186,10 +135,10 @@ def import_project(
     - The project will be imported from GitHub.
     - This just makes the API aware of the project.
     """
-    # Sanitize project name for consistency
+    # Always use sanitized name for storage and lookup
     sanitized_name = sanitize_project_name(project_name)
     # Raise an error if the project already exists.
-    game: Game | None = find_project_by_name(db, sanitized_name)
+    game: Game | None = find_project_by_name(db, project_name)  # This will find by sanitized name
     if game is not None:
         raise HTTPException(status_code=400, detail="Project already exists")
     db.add(
@@ -215,9 +164,9 @@ def upload_file(
     - If the project does not exist in the database, create a new row.
     - If it exists, update the modification timestamp.
     """
-    # Sanitize project name for consistency
+    # Always use sanitized name for storage and lookup
     sanitized_name = sanitize_project_name(project_name)
-    game: Game | None = find_project_by_name(db, sanitized_name)
+    game: Game | None = find_project_by_name(db, project_name)  # This will find by sanitized name
     if game is not None and game.locked:
         raise HTTPException(status_code=403, detail="Project is locked")
 
@@ -286,10 +235,10 @@ def create_ai_project(
     - The content will be the AI generated HTML.
     """
     prompt = body.content
-    # Sanitize project name for consistency
+    # Always use sanitized name for storage and lookup
     sanitized_name = sanitize_project_name(project_name)
     # Raise an error if the project already exists.
-    game: Game | None = find_project_by_name(db, sanitized_name)
+    game: Game | None = find_project_by_name(db, project_name)  # This will find by sanitized name
     if game is not None:
         raise HTTPException(status_code=400, detail="Project already exists")
 
@@ -392,7 +341,10 @@ def get_game_html(
     # Find project with backwards compatibility
     game: Game | None = find_project_by_name(db, project)
     if game is None:
-        raise HTTPException(status_code=404, detail="Project not found")
+        sanitized_project = sanitize_project_name(project)
+        raise HTTPException(
+            status_code=404, detail=f"Game project '{project}' (sanitized: '{sanitized_project}') not found"
+        )
 
     try:
         content = github.get_file_content(game.project)
@@ -436,7 +388,10 @@ def get_raw_file(
     # Find project with backwards compatibility
     game: Game | None = find_project_by_name(db, project)
     if game is None:
-        raise HTTPException(status_code=404, detail="Project not found")
+        sanitized_project = sanitize_project_name(project)
+        raise HTTPException(
+            status_code=404, detail=f"Game project '{project}' (sanitized: '{sanitized_project}') not found"
+        )
 
     try:
         content = github.get_raw_file_content(game.project, file_path)
@@ -518,9 +473,8 @@ def delete_project(
     - The project will be deleted from the database.
     - The project will be deleted from GitHub.
     """
-    # Sanitize project name and find with backwards compatibility
-    sanitized_name = sanitize_project_name(project_name)
-    game: Game | None = find_project_by_name(db, sanitized_name)
+    # Find project with backwards compatibility
+    game: Game | None = find_project_by_name(db, project_name)
     if game is None:
         raise HTTPException(status_code=400, detail="Project does not exist")
     if game.locked:
@@ -547,9 +501,8 @@ def revert_project(
     Revert a project to the last commit.
     - The project will be reverted from GitHub.
     """
-    # Sanitize project name and find with backwards compatibility
-    sanitized_name = sanitize_project_name(project_name)
-    game: Game | None = find_project_by_name(db, sanitized_name)
+    # Find project with backwards compatibility
+    game: Game | None = find_project_by_name(db, project_name)
     if game is None:
         raise HTTPException(status_code=400, detail="Project does not exist")
     if game.locked:
@@ -589,38 +542,6 @@ def revert_project(
     )
     response.background = background_tasks
     return response
-
-
-@router.get("/", include_in_schema=False)
-def root_handler(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> Response:
-    """
-    Handle root requests - serve game if subdomain is detected, otherwise serve static files.
-    """
-    if settings.ENABLE_SUBDOMAINS:
-        host = get_host_from_headers(dict(request.headers))
-        if host:
-            subdomain = extract_subdomain(host, settings.BASE_DOMAIN)
-            if subdomain:
-                # Try to serve the game directly
-                game = find_project_by_name(db, subdomain)
-                if game:
-                    try:
-                        content = github.get_file_content(game.project)
-                        # Update the number of opens for the game.
-                        game.num_opens += 1
-                        flag_modified(game, "num_opens")
-                        db.commit()
-                        return Response(content, media_type="text/html")
-                    except github.GithubFileNotFoundError:
-                        pass
-                # If project not found, return 404
-                raise HTTPException(status_code=404, detail="Project not found")
-
-    # For non-subdomain requests or when subdomains are disabled, this will be handled by static files
-    raise HTTPException(status_code=404, detail="Not found")
 
 
 router.include_router(ai_router)

@@ -4,13 +4,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from app.database import engine
 from app.db_migrations import run_migrations
 from app.models import Base
 from app.routes import router
 from app.settings import settings
+from app.subdomain_handler import SubdomainStaticFiles
 
 WORKERS = 4  # Number of worker threads for handling requests
 
@@ -35,7 +35,7 @@ app = FastAPI(
 )
 
 app.include_router(router)
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/", SubdomainStaticFiles(directory="static", html=True), name="static")
 
 
 app.add_middleware(
