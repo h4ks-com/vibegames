@@ -47,3 +47,15 @@ force-single-line = true
 [tool.mypy]
 plugins = ["pydantic.mypy"]
 ignore_missing_imports = true
+exclude = [
+    "alembic/"
+]
+
+[[tool.mypy.overrides]]
+module = "app.db_migrations"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "alembic.*"
+ignore_missing_imports = true
+ignore_errors = true
