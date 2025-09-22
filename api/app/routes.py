@@ -204,6 +204,8 @@ def upload_file(
             "status": "success",
             "html_path": html_path,
             "thumb_url": thumb_url,
+            "subdomain_url": f"https://{sanitized_name}.{settings.BASE_DOMAIN}",
+            "github_url": github.get_file_url(sanitized_name, file_path),
         }
     )
     response.background = background_tasks
