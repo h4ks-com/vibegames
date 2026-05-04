@@ -37,7 +37,7 @@ class SubdomainStaticFiles(staticfiles.StaticFiles):
 
                         if game:
                             # Try serving the requested path first
-                            requested_path = path if path else "index.html"
+                            requested_path = "index.html" if not path or path == "." else path
                             try:
                                 content, media_type = github.get_file_content_with_type(
                                     game.project, requested_path
