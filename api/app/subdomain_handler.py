@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from fastapi import Response
-from fastapi.staticfiles import StaticFiles
+from fastapi import staticfiles
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 from starlette.requests import Request
@@ -15,7 +15,7 @@ from app.project_naming import sanitize_project_name
 from app.settings import settings
 
 
-class SubdomainStaticFiles(StaticFiles):
+class SubdomainStaticFiles(staticfiles.StaticFiles):
     """Custom StaticFiles that handles subdomain-based game serving."""
 
     def __init__(self, *args, **kwargs):
@@ -31,22 +31,34 @@ class SubdomainStaticFiles(StaticFiles):
             if host:
                 subdomain = extract_subdomain(host, settings.BASE_DOMAIN)
                 if subdomain:
-                    # Try to serve the game directly
                     db: Session = next(get_db())
                     try:
-                        # Find project with case-insensitive sanitized lookup
                         game = find_project_by_name_case_insensitive(db, subdomain)
 
                         if game:
+                            # Try serving the requested path first
+                            requested_path = path if path else "index.html"
                             try:
-                                content = github.get_file_content(game.project)
-                                # Update the number of opens for the game.
-                                game.num_opens += 1
-                                flag_modified(game, "num_opens")
-                                db.commit()
-                                return Response(content, media_type="text/html")
+                                content, media_type = github.get_file_content_with_type(
+                                    game.project, requested_path
+                                )
                             except github.GithubFileNotFoundError:
-                                pass
+                                # Fallback to index.html for SPA-style routing
+                                try:
+                                    content, media_type = github.get_file_content_with_type(
+                                        game.project, "index.html"
+                                    )
+                                except github.GithubFileNotFoundError:
+                                    raise HTTPException(
+                                        status_code=404,
+                                        detail=f"File '{requested_path}' not found in project '{subdomain}'",
+                                    )
+
+                            # Update the number of opens for the game.
+                            game.num_opens += 1
+                            flag_modified(game, "num_opens")
+                            db.commit()
+                            return Response(content, media_type=media_type)
 
                         # If project not found, return detailed 404
                         sanitized_subdomain = sanitize_project_name(subdomain)
