@@ -144,16 +144,13 @@ def get_file_content_with_type(project: str, path: str | None = None) -> tuple[b
     dl_resp = requests.get(download_url, headers={"Authorization": f"token {settings.GITHUB_API_TOKEN}"}, timeout=10)
     dl_resp.raise_for_status()
 
+    guessed_mimetype, _ = mimetypes.guess_type(path)
+    if guessed_mimetype:
+        return dl_resp.content, guessed_mimetype
+
     content_type = dl_resp.headers.get("Content-Type", "")
-    # GitHub sometimes returns charset info, strip it for cleanliness
     if ";" in content_type:
         content_type = content_type.split(";")[0].strip()
-
-    # Fallback to mimetypes if GitHub didn't provide a useful content-type
-    if not content_type or content_type == "application/octet-stream":
-        guessed, _ = mimetypes.guess_type(path)
-        if guessed:
-            content_type = guessed
 
     return dl_resp.content, content_type or "application/octet-stream"
 
