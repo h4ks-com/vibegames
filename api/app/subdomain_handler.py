@@ -1,3 +1,6 @@
+import mimetypes
+import os
+
 from fastapi import HTTPException
 from fastapi import Response
 from fastapi import staticfiles
@@ -41,7 +44,14 @@ class SubdomainStaticFiles(staticfiles.StaticFiles):
                             try:
                                 content, media_type = github.get_file_content_with_type(game.project, requested_path)
                             except github.GithubFileNotFoundError:
-                                # Fallback to index.html for SPA-style routing
+                                # Only fall back to index.html for extensionless paths (SPA routing).
+                                # Assets (.jpg, .css, .js, etc.) that don't exist should 404.
+                                ext = os.path.splitext(requested_path)[1]
+                                if ext and ext.lower() not in (".html", ".htm"):
+                                    raise HTTPException(
+                                        status_code=404,
+                                        detail=f"File '{requested_path}' not found in project '{subdomain}'",
+                                    )
                                 try:
                                     content, media_type = github.get_file_content_with_type(game.project, "index.html")
                                 except github.GithubFileNotFoundError:
