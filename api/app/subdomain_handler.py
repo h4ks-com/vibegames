@@ -39,15 +39,11 @@ class SubdomainStaticFiles(staticfiles.StaticFiles):
                             # Try serving the requested path first
                             requested_path = "index.html" if not path or path == "." else path
                             try:
-                                content, media_type = github.get_file_content_with_type(
-                                    game.project, requested_path
-                                )
+                                content, media_type = github.get_file_content_with_type(game.project, requested_path)
                             except github.GithubFileNotFoundError:
                                 # Fallback to index.html for SPA-style routing
                                 try:
-                                    content, media_type = github.get_file_content_with_type(
-                                        game.project, "index.html"
-                                    )
+                                    content, media_type = github.get_file_content_with_type(game.project, "index.html")
                                 except github.GithubFileNotFoundError:
                                     raise HTTPException(
                                         status_code=404,
