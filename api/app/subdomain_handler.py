@@ -17,6 +17,9 @@ from app.project_naming import get_host_from_headers
 from app.project_naming import sanitize_project_name
 from app.settings import settings
 
+# Never served from a project's files: these belong to the platform itself.
+RESERVED_PREFIXES = ("__api/", "__auth/")
+
 
 class SubdomainStaticFiles(staticfiles.StaticFiles):
     """Custom StaticFiles that handles subdomain-based game serving."""
@@ -26,6 +29,9 @@ class SubdomainStaticFiles(staticfiles.StaticFiles):
 
     async def get_response(self, path: str, scope) -> StarletteResponse:
         """Override to check for subdomain games first."""
+
+        if path.startswith(RESERVED_PREFIXES):
+            raise HTTPException(status_code=404, detail="Not found")
 
         if settings.ENABLE_SUBDOMAINS:
             request = Request(scope)
