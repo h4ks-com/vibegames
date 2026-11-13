@@ -4,6 +4,11 @@ https://games.h4ks.com
 
 Showroom for shitty vibed projects. Synced to github for easy access and collaboration.
 
+## User data API
+
+Projects get per-user storage and a Logto login at `/<project>/__api`. See
+[docs/rows-api.md](docs/rows-api.md).
+
 ## API
 ```sh
 cd api
