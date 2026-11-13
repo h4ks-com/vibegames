@@ -21,6 +21,28 @@ class Settings(BaseSettings):
     ENABLE_SUBDOMAINS: bool = False
     BASE_DOMAIN: str = "games.h4ks.com"
 
+    # Logto (https://auth.h4ks.com). Leave LOGTO_CLIENT_ID empty to disable user login.
+    LOGTO_ISSUER: str = "https://auth.h4ks.com/oidc"
+    LOGTO_CLIENT_ID: str = ""
+    LOGTO_CLIENT_SECRET: str = ""
+    LOGTO_REDIRECT_URI: str = ""
+    LOGTO_SCOPE: str = "openid profile"
+    SESSION_COOKIE_NAME: str = "vg_session"
+    # Set to BASE_DOMAIN so every project subdomain shares one login.
+    # Empty means host-only cookie (correct for localhost).
+    SESSION_COOKIE_DOMAIN: str = ""
+    SESSION_TTL_DAYS: int = 30
+
+    # Rows API (see docs/rows-api.md). The app id always comes from the subdomain.
+    OBBY_ENABLED: bool = True
+    # Used instead of a subdomain when ENABLE_SUBDOMAINS is off (local dev and tests).
+    OBBY_DEV_APP: str = "dev"
+    OBBY_MAX_VALUE_BYTES: int = 8192
+    OBBY_MAX_KEYS: int = 64
+    OBBY_MAX_BYTES: int = 131072
+    OBBY_MAX_PUBLIC_ROWS: int = 5000
+    OBBY_WRITES_PER_MINUTE: int = 60
+
     # API keys can be a single string or a comma-separated list
     @model_validator(mode="before")
     @classmethod

@@ -24,6 +24,8 @@ dependencies = [
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.15.0"
+pytest = "^8.3.0"
+httpx = "^0.28.0"
 types-pytz = "^2025.2.0.20250326"
 types-requests = "^2.32.0.20250328"
 pre-commit = "^4.2.0"
@@ -31,6 +33,10 @@ pre-commit = "^4.2.0"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 120
