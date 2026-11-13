@@ -90,7 +90,7 @@ Being precise, because it is easy to over-promise:
   immediately. There is no backup retention policy yet.
 
 If we ever need "not even the operator can read it", that requires client-side encryption in
- the game, which this API does not attempt.
+the game, which this API does not attempt.
 
 ## Configuration
 
